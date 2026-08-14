@@ -1,1 +1,9 @@
 mltbenv/*
+venv/*
+.git
+.github
+*.session*
+downloads/*
+__pycache__
+.pytest_cache
+log.txt

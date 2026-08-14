@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 WORKDIR /app
 RUN chmod 777 /app
 
-# Install system dependencies & runtime tools
+# Install system dependencies, runtime binaries & build tools
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         aria2 \
@@ -22,18 +22,21 @@ RUN apt-get update && \
         gcc \
         python3-dev \
     && curl -fsSL https://rclone.org/install.sh | bash \
-    && apt-get purge -y gcc python3-dev \
-    && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/* /root/.cache
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
+# Install Python virtualenv & dependencies
 COPY requirements.txt .
 RUN python3 -m venv /app/mltbenv && \
     /app/mltbenv/bin/pip install --no-cache-dir --upgrade pip wheel setuptools && \
-    /app/mltbenv/bin/pip install --no-cache-dir -r requirements.txt
+    /app/mltbenv/bin/pip install --no-cache-dir -r requirements.txt && \
+    apt-get purge -y gcc python3-dev && \
+    apt-get autoremove -y && \
+    rm -rf /root/.cache
 
+# Copy application source
 COPY . .
 
+# Fix script line endings and set execution permissions
 RUN sed -i 's/\r$//' *.sh && chmod +x *.sh
 
 CMD ["bash", "start.sh"]
