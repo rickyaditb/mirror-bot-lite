@@ -12,6 +12,9 @@ import subprocess
 import shutil
 import time
 
+# Disable pytest collection for CLI diagnostic script
+__test__ = False
+
 # Ensure ~/.local/bin and ./venv/bin are in PATH
 local_bin = os.path.expanduser("~/.local/bin")
 if local_bin not in os.environ.get("PATH", ""):

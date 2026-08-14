@@ -1,11 +1,10 @@
-"""Tests for the new ``-ad`` and ``-bh`` CLI flags."""
+"""Tests for CLI flags parser in bot_utils."""
 
 from __future__ import annotations
 
-import importlib
 import sys
 from types import ModuleType
-
+from pathlib import Path
 import pytest
 
 
@@ -25,12 +24,7 @@ def arg_parser(monkeypatch):
     side effects elsewhere in the package."""
     _stub_bot_package(monkeypatch)
     sys.modules.pop("bot.helper.ext_utils.bot_utils", None)
-    # ``bot_utils`` itself imports several Telegram-only helpers, so we
-    # load it from source via execfile-style trick to avoid pulling in
-    # the full bot stack.
-    from importlib import util
-    from pathlib import Path
-
+    
     file_path = (
         Path(__file__).resolve().parent.parent
         / "bot"
@@ -39,41 +33,39 @@ def arg_parser(monkeypatch):
         / "bot_utils.py"
     )
     src = file_path.read_text(encoding="utf-8")
-    # Strip imports that drag in Telegram + DB dependencies; we only
-    # need ``arg_parser`` for these tests.
     namespace: dict[str, object] = {}
-    # Provide minimal stubs the function references.
     namespace["loads"] = __import__("ast").literal_eval
     snippet_start = src.find("def arg_parser(")
     snippet_end = src.find("\ndef ", snippet_start + 1)
     if snippet_end == -1:
         snippet_end = len(src)
     snippet = src[snippet_start:snippet_end]
-    exec(snippet, namespace)  # noqa: S102 - test-only controlled exec
+    exec(snippet, namespace)
     return namespace["arg_parser"]
 
 
-def test_ad_bool_flag_set(arg_parser):
-    args = {"-ad": False, "-bh": False, "-z": False, "link": ""}
-    arg_parser(["http://x", "-ad"], args)
-    assert args["-ad"] is True
-    assert args["link"] == "http://x"
+def test_zip_bool_flag_set(arg_parser):
+    args = {"-z": False, "-s": False, "link": ""}
+    arg_parser(["https://speed.hetzner.de/100MB.bin", "-z"], args)
+    assert args["-z"] is True
+    assert args["link"] == "https://speed.hetzner.de/100MB.bin"
 
 
-def test_bh_bool_flag_set(arg_parser):
-    args = {"-ad": False, "-bh": False, "link": ""}
-    arg_parser(["http://x", "-bh"], args)
-    assert args["-bh"] is True
+def test_zip_and_select_combined(arg_parser):
+    args = {"-z": False, "-s": False, "link": ""}
+    arg_parser(["https://speed.hetzner.de/100MB.bin", "-z", "-s"], args)
+    assert args["-z"] is True
+    assert args["-s"] is True
 
 
-def test_ad_and_bh_combined(arg_parser):
-    args = {"-ad": False, "-bh": False, "link": ""}
-    arg_parser(["http://x", "-ad", "-bh"], args)
-    assert args["-ad"] is True
-    assert args["-bh"] is True
+def test_doc_media_flags(arg_parser):
+    args = {"-doc": False, "-med": False, "link": ""}
+    arg_parser(["https://speed.hetzner.de/100MB.bin", "-doc"], args)
+    assert args["-doc"] is True
+    assert args["-med"] is False
 
 
 def test_unknown_flag_left_alone(arg_parser):
-    args = {"-ad": False, "link": ""}
-    arg_parser(["http://x", "-unknown"], args)
-    assert args["-ad"] is False
+    args = {"-z": False, "link": ""}
+    arg_parser(["https://speed.hetzner.de/100MB.bin", "-unknown"], args)
+    assert args["-z"] is False

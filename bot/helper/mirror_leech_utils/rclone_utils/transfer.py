@@ -357,87 +357,6 @@ class RcloneTransferHelper:
         )
         return
 
-    async def clone(self, config_path, src_remote, src_path, mime_type, method):
-        destination = self._listener.up_dest
-        dst_remote, dst_path = destination.split(":", 1)
-
-        try:
-            src_remote_opts, dst_remote_opt = await gather(
-                self._get_remote_options(config_path, src_remote),
-                self._get_remote_options(config_path, dst_remote),
-            )
-        except Exception as err:
-            await self._listener.on_upload_error(str(err))
-            return None, None
-
-        src_remote_type, dst_remote_type = (
-            src_remote_opts["type"],
-            dst_remote_opt["type"],
-        )
-
-        cmd = self._get_updated_command(
-            config_path, f"{src_remote}:{src_path}", destination, method
-        )
-        if not self._listener.rc_flags and src_remote_type == "drive":
-            cmd.extend(
-                (
-                    "--drive-acknowledge-abuse",
-                    "--tpslimit",
-                    "3",
-                    "--tpslimit-burst",
-                    "1",
-                    "--transfers",
-                    "3",
-                )
-            )
-
-        self._proc = await create_subprocess_exec(*cmd, stdout=PIPE, stderr=PIPE)
-        await self._progress()
-        _, stderr = await self._proc.communicate()
-        return_code = self._proc.returncode
-
-        if self._listener.is_cancelled:
-            return None, None
-
-        if return_code == -9:
-            return None, None
-        elif return_code == 0:
-            if mime_type != "Folder":
-                destination += (
-                    f"/{self._listener.name}" if dst_path else self._listener.name
-                )
-            if dst_remote_type == "drive":
-                link = await self._get_gdrive_link(config_path, destination, mime_type)
-                return (
-                    (None, None) if self._listener.is_cancelled else (link, destination)
-                )
-            else:
-                cmd = [
-                    "rclone",
-                    "link",
-                    "--config",
-                    config_path,
-                    destination,
-                ]
-                res, err, code = await cmd_exec(cmd)
-
-                if self._listener.is_cancelled:
-                    return None, None
-
-                if code == 0:
-                    return res, destination
-                elif code != -9:
-                    LOGGER.error(
-                        f"while getting link. Path: {destination} | Stderr: {err}"
-                    )
-                    return None, destination
-
-        else:
-            error = stderr.decode().strip()
-            LOGGER.error(error)
-            await self._listener.on_upload_error(error[:4000])
-            return None, None
-
     def _get_updated_command(
         self,
         config_path,
@@ -503,9 +422,7 @@ class RcloneTransferHelper:
         if self._is_download:
             LOGGER.info(f"Cancelling Download: {self._listener.name}")
             await self._listener.on_download_error("Stopped by user!")
-        elif self._is_upload:
+        else:
             LOGGER.info(f"Cancelling Upload: {self._listener.name}")
             await self._listener.on_upload_error("your upload has been stopped!")
-        else:
-            LOGGER.info(f"Cancelling Clone: {self._listener.name}")
-            await self._listener.on_upload_error("your clone has been stopped!")
+

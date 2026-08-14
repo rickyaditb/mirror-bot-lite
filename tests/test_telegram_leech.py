@@ -11,6 +11,9 @@ import os
 import asyncio
 import time
 
+# Disable pytest collection for live Telegram script
+__test__ = False
+
 # Setup path
 sys.path.insert(0, os.path.abspath("."))
 

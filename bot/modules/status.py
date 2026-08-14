@@ -82,7 +82,6 @@ async def get_download_status(download):
         "telegram",
         "yt-dlp",
         "rclone",
-        "gDriveApi",
     ]:
         speed = download.speed()
     else:
@@ -146,7 +145,6 @@ async def status_pages(_, query):
             "Split": 0,
             "QueueDl": 0,
             "QueueUp": 0,
-            "Clone": 0,
             "CheckUp": 0,
             "Pause": 0,
             "SamVid": 0,
@@ -181,8 +179,6 @@ async def status_pages(_, query):
                         tasks["QueueDl"] += 1
                     case MirrorStatus.STATUS_QUEUEUP:
                         tasks["QueueUp"] += 1
-                    case MirrorStatus.STATUS_CLONE:
-                        tasks["Clone"] += 1
                     case MirrorStatus.STATUS_CHECK:
                         tasks["CheckUp"] += 1
                     case MirrorStatus.STATUS_PAUSED:
@@ -198,8 +194,8 @@ async def status_pages(_, query):
 
         msg = f"""<b>DL:</b> {tasks['Download']} | <b>UP:</b> {tasks['Upload']} | <b>SD:</b> {tasks['Seed']} | <b>AR:</b> {tasks['Archive']}
 <b>EX:</b> {tasks['Extract']} | <b>SP:</b> {tasks['Split']} | <b>QD:</b> {tasks['QueueDl']} | <b>QU:</b> {tasks['QueueUp']}
-<b>CL:</b> {tasks['Clone']} | <b>CK:</b> {tasks['CheckUp']} | <b>PA:</b> {tasks['Pause']} | <b>SV:</b> {tasks['SamVid']}
-<b>CM:</b> {tasks['ConvertMedia']} | <b>FF:</b> {tasks['FFmpeg']}
+<b>CK:</b> {tasks['CheckUp']} | <b>PA:</b> {tasks['Pause']} | <b>SV:</b> {tasks['SamVid']} | <b>CM:</b> {tasks['ConvertMedia']}
+<b>FF:</b> {tasks['FFmpeg']}
 
 <b>ODLS:</b> {get_readable_file_size(dl_speed)}/s
 <b>OULS:</b> {get_readable_file_size(up_speed)}/s
