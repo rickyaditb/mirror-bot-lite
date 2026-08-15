@@ -60,23 +60,6 @@ async def send_file(message, file, caption=""):
         return str(e)
 
 
-async def send_rss(text, chat_id, thread_id):
-    try:
-        return await TgClient.bot.send_message(
-            chat_id=chat_id,
-            text=text,
-            message_thread_id=thread_id,
-            disable_notification=True,
-        )
-    except (FloodWait, FloodPremiumWait) as f:
-        LOGGER.warning(str(f))
-        await sleep(f.value * 1.2)
-        return await send_rss(text, chat_id, thread_id)
-    except Exception as e:
-        LOGGER.error(str(e))
-        return str(e)
-
-
 async def delete_message(message):
     try:
         await message.delete()

@@ -26,6 +26,7 @@ class Config:
     FFMPEG_CMDS = {}
     FILES_LINKS = False
     INCOMPLETE_TASK_NOTIFIER = False
+    INDEX_URL = ""
     LEECH_DUMP_CHAT = ""
     LEECH_FILENAME_PREFIX = ""
     LEECH_SPLIT_SIZE = 2097152000
@@ -38,6 +39,7 @@ class Config:
     QUEUE_UPLOAD = 0
     RCLONE_FLAGS = ""
     RCLONE_PATH = ""
+    RCLONE_SERVE_URL = ""
     STATUS_LIMIT = 4
     STATUS_UPDATE_INTERVAL = 15
     SUDO_USERS = ""
@@ -51,6 +53,7 @@ class Config:
     UPSTREAM_BRANCH = "master"
     USER_SESSION_STRING = ""
     USER_TRANSMISSION = False
+    USE_SERVICE_ACCOUNTS = False
     YT_DLP_OPTIONS = {}
 
     @classmethod

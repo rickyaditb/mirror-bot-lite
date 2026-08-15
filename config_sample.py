@@ -27,9 +27,12 @@ NAME_SUBSTITUTE = r""
 FFMPEG_CMDS = {"merge": ["-f concat -safe 0 -i mltb.txt -c copy mltb.mp4 -del"]}
 UPLOAD_PATHS = {}
 
-# Rclone
+# Rclone / Cloud
 RCLONE_PATH = ""
 RCLONE_FLAGS = ""
+RCLONE_SERVE_URL = ""
+INDEX_URL = ""
+USE_SERVICE_ACCOUNTS = False
 
 # Update
 UPSTREAM_REPO = ""

@@ -417,8 +417,8 @@ class RcloneTransferHelper:
         if self._proc is not None:
             try:
                 self._proc.kill()
-            except:
-                pass
+            except Exception as e:
+                LOGGER.debug(f"Error killing rclone proc: {e}")
         if self._is_download:
             LOGGER.info(f"Cancelling Download: {self._listener.name}")
             await self._listener.on_download_error("Stopped by user!")

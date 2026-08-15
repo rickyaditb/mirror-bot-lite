@@ -49,3 +49,6 @@ class BuzzHeavierStatus:
 
     def task(self):
         return self._obj
+
+    async def cancel_task(self):
+        await self._obj.cancel_task()

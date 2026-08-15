@@ -83,23 +83,23 @@ UPSTREAM_REPO = config_file.get("UPSTREAM_REPO", "").strip()
 
 UPSTREAM_BRANCH = config_file.get("UPSTREAM_BRANCH", "").strip() or "master"
 
+from shutil import rmtree
+
 if UPSTREAM_REPO:
     if path.exists(".git"):
-        srun(["rm", "-rf", ".git"])
+        rmtree(".git", ignore_errors=True)
 
-    update = srun(
-        [
-            f"git init -q \
-                     && git config --global user.email e.anastayyar@gmail.com \
-                     && git config --global user.name mltb \
-                     && git add . \
-                     && git commit -sm update -q \
-                     && git remote add origin {UPSTREAM_REPO} \
-                     && git fetch origin -q \
-                     && git reset --hard origin/{UPSTREAM_BRANCH} -q"
-        ],
-        shell=True,
+    cmd = (
+        f"git init -q "
+        f"&& git config user.email bot@mirror-bot-lite.local "
+        f"&& git config user.name mirror-bot-lite "
+        f"&& git add . "
+        f"&& git commit -sm update -q "
+        f"&& git remote add origin {UPSTREAM_REPO} "
+        f"&& git fetch origin -q "
+        f"&& git reset --hard origin/{UPSTREAM_BRANCH} -q"
     )
+    update = srun(cmd, shell=True)
 
     if update.returncode == 0:
         log_info("Successfully updated with latest commit from UPSTREAM_REPO")

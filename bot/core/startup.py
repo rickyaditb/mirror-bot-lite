@@ -164,8 +164,34 @@ async def load_configurations():
         async with aiopen(".netrc", "w"):
             pass
 
-    await (
-        await create_subprocess_shell(
-            "chmod 600 .netrc && (cp .netrc /root/.netrc 2>/dev/null || cp .netrc ~/.netrc 2>/dev/null || true) && chmod +x aria.sh && ./aria.sh"
-        )
-    ).wait()
+    from os import chmod, name as os_name
+    from shutil import copy2, which
+    from pathlib import Path
+
+    if os_name != "nt":
+        try:
+            chmod(".netrc", 0o600)
+            for dest in [Path.home() / ".netrc", Path("/root/.netrc")]:
+                try:
+                    copy2(".netrc", dest)
+                    chmod(dest, 0o600)
+                except Exception:
+                    pass
+        except Exception as e:
+            LOGGER.warning(f"Failed to set .netrc permissions: {e}")
+
+        if await aiopath.exists("aria.sh"):
+            try:
+                chmod("aria.sh", 0o755)
+            except Exception:
+                pass
+            proc = await create_subprocess_shell("./aria.sh")
+            await proc.wait()
+    else:
+        if which("aria2c"):
+            try:
+                await create_subprocess_shell(
+                    "aria2c --enable-rpc=true --rpc-listen-all=false --rpc-listen-port=6800 --daemon=true --quiet=true"
+                )
+            except Exception as e:
+                LOGGER.warning(f"Could not spawn aria2c daemon on Windows: {e}")

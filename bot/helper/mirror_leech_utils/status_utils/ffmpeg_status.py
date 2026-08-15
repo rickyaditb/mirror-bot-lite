@@ -57,6 +57,6 @@ class FFmpegStatus:
         ):
             try:
                 self.listener.subproc.kill()
-            except:
-                pass
+            except Exception as e:
+                LOGGER.debug(f"Error killing subproc in ffmpeg_status: {e}")
         await self.listener.on_upload_error(f"{self._cstatus} stopped by user!")

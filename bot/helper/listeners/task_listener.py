@@ -60,9 +60,11 @@ class TaskListener(TaskConfig):
                 for intvl in list(st.values()):
                     intvl.cancel()
             intervals["status"].clear()
-            await gather(TorrentManager.aria2.purgeDownloadResult(), delete_status())
-        except:
-            pass
+            if TorrentManager.aria2:
+                await TorrentManager.aria2.purgeDownloadResult()
+            await delete_status()
+        except Exception as e:
+            LOGGER.debug(f"Task clean error: {e}")
 
     def clear(self):
         self.subname = ""
@@ -367,7 +369,7 @@ class TaskListener(TaskConfig):
             if mime_type == "Folder":
                 msg += f"\n<b>SubFolders: </b>{folders}"
                 msg += f"\n<b>Files: </b>{files}"
-            if self.is_buzzheavier:
+            if self.is_buzzheavier or self.is_gofile:
                 buttons = ButtonMaker()
                 buttons.url_button("☁️ Cloud Link", link)
                 button = buttons.build_menu()
@@ -396,6 +398,8 @@ class TaskListener(TaskConfig):
                     elif Config.INDEX_URL:
                         INDEX_URL = Config.INDEX_URL
                     if INDEX_URL:
+                        if not INDEX_URL.endswith("/"):
+                            INDEX_URL = f"{INDEX_URL}/"
                         share_url = f"{INDEX_URL}findpath?id={dir_id}"
                         buttons.url_button("⚡ Index Link", share_url)
                         if mime_type.startswith(("image", "video", "audio")):
@@ -462,6 +466,13 @@ class TaskListener(TaskConfig):
             if self.mid in non_queued_up:
                 non_queued_up.remove(self.mid)
 
+        if self.subproc is not None and self.subproc.returncode is None:
+            try:
+                self.subproc.kill()
+            except Exception:
+                pass
+        self.subproc = None
+
         await start_from_queued()
         await sleep(3)
         await clean_download(self.dir)
@@ -499,6 +510,13 @@ class TaskListener(TaskConfig):
                 non_queued_dl.remove(self.mid)
             if self.mid in non_queued_up:
                 non_queued_up.remove(self.mid)
+
+        if self.subproc is not None and self.subproc.returncode is None:
+            try:
+                self.subproc.kill()
+            except Exception:
+                pass
+        self.subproc = None
 
         await start_from_queued()
         await sleep(3)

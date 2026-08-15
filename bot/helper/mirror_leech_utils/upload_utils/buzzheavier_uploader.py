@@ -59,7 +59,7 @@ class BuzzHeavierUploader:
     def speed(self):
         try:
             return self._processed_bytes / (time() - self._start_time)
-        except:
+        except Exception:
             return 0
 
     def _get_chunk_size(self, file_size: int) -> int:
@@ -231,3 +231,8 @@ class BuzzHeavierUploader:
             if self._client:
                 await self._client.aclose()
                 self._client = None
+
+    async def cancel_task(self):
+        self._listener.is_cancelled = True
+        LOGGER.info(f"Cancelling Upload: {self._listener.name}")
+        await self._listener.on_upload_error("your upload has been stopped!")

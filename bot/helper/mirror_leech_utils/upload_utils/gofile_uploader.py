@@ -10,6 +10,7 @@ from httpx import AsyncByteStream, AsyncClient, HTTPError, Limits, Timeout
 
 from ....core.config_manager import Config
 from ...ext_utils.bot_utils import sync_to_async
+from ...ext_utils.files_utils import get_mime_type
 
 LOGGER = getLogger(__name__)
 
@@ -130,11 +131,15 @@ class GoFileUploader:
         files = []
         corrupted = 0
         error = ""
+        folders_count = 0
         if await aiopath.isfile(self._path):
             files.append(self._path)
+            mime_type = await sync_to_async(get_mime_type, self._path)
         else:
+            mime_type = "Folder"
             walk_data = await sync_to_async(lambda: list(walk(self._path)))
-            for root, _, names in walk_data:
+            for root, dirs, names in walk_data:
+                folders_count += len(dirs)
                 for name in sorted(names):
                     candidate = ospath.join(root, name)
                     if await aiopath.isfile(candidate):
@@ -145,6 +150,7 @@ class GoFileUploader:
             )
             return
         total_files = len(files)
+        first_link = ""
         try:
             async with AsyncClient(
                 timeout=_HTTP_TIMEOUT,
@@ -183,12 +189,13 @@ class GoFileUploader:
         )
         await self._listener.on_upload_complete(
             first_link,
-            files_dict,
-            total_files,
-            corrupted,
+            total_files - corrupted,
+            folders_count,
+            mime_type,
         )
 
     async def cancel_task(self):
         self._listener.is_cancelled = True
         LOGGER.info(f"Cancelling Upload: {self._listener.name}")
         await self._listener.on_upload_error("your upload has been stopped!")
+

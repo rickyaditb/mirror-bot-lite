@@ -24,8 +24,8 @@ class TorrentManager:
         else:
             try:
                 await cls.aria2.removeDownloadResult(download.get("gid", ""))
-            except:
-                pass
+            except Exception as e:
+                LOGGER.debug(f"Aria2 removeDownloadResult error: {e}")
 
     @classmethod
     async def remove_all(cls):
@@ -40,17 +40,21 @@ class TorrentManager:
         ]
         try:
             await gather(*tasks)
-        except:
-            pass
+        except Exception as e:
+            LOGGER.debug(f"Aria2 remove_all error: {e}")
 
     @classmethod
     async def overall_speed(cls):
         if not cls.aria2:
             return 0, 0
-        s = await cls.aria2.getGlobalStat()
-        download_speed = int(s.get("downloadSpeed", "0"))
-        upload_speed = int(s.get("uploadSpeed", "0"))
-        return download_speed, upload_speed
+        try:
+            s = await cls.aria2.getGlobalStat()
+            download_speed = int(s.get("downloadSpeed", "0"))
+            upload_speed = int(s.get("uploadSpeed", "0"))
+            return download_speed, upload_speed
+        except Exception as e:
+            LOGGER.debug(f"Aria2 overall_speed error: {e}")
+            return 0, 0
 
     @classmethod
     async def pause_all(cls):

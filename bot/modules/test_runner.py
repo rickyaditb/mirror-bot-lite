@@ -53,9 +53,15 @@ async def auto_test(client, message: Message):
         f"• <b>Engine:</b> Aria2c -> TaskListener -> {mode_name}"
     )
 
+    import copy
+
     # Construct synthetic message with dummy link
-    simulated_message = message
-    simulated_message.text = f"/leech {DUMMY_TEST_URL} -n automated_smoke_test.txt" if is_leech else f"/mirror {DUMMY_TEST_URL} -n automated_smoke_test.txt"
+    simulated_message = copy.copy(message)
+    simulated_message.text = (
+        f"/leech {DUMMY_TEST_URL} -n automated_smoke_test.txt"
+        if is_leech
+        else f"/mirror {DUMMY_TEST_URL} -n automated_smoke_test.txt"
+    )
 
     bot_loop.create_task(
         Mirror(client, simulated_message, is_leech=is_leech).new_event()

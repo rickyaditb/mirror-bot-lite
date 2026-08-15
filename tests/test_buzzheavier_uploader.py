@@ -151,3 +151,13 @@ def test_user_settings_custom_account(buzzheavier_module):
     uploader = buzzheavier_module.BuzzHeavierUploader(listener, "/tmp/fake")
     assert uploader._account_id == "user_token_123"
     assert listener.up_dest == "custom_folder"
+
+
+@pytest.mark.asyncio
+async def test_buzzheavier_cancel_task(buzzheavier_module):
+    listener = _make_listener()
+    listener.name = "cancel_test"
+    uploader = buzzheavier_module.BuzzHeavierUploader(listener, "/tmp/fake")
+    await uploader.cancel_task()
+    assert listener.is_cancelled is True
+    listener.on_upload_error.assert_awaited_once_with("your upload has been stopped!")
