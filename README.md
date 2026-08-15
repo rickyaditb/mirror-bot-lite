@@ -2,7 +2,7 @@
 
 A high-performance, ultra-lightweight, and container-optimized Telegram mirror & leech bot. Forked and refined from [anasty17/mirror-leech-telegram-bot](https://github.com/anasty17/mirror-leech-telegram-bot).
 
-Mirror-Bot-Lite is stripped down strictly to **core downloading and leeching** (Torrents, Direct URLs, YouTube/Streams, Telegram files -> Telegram or Cloud via Rclone). All heavy background daemons, bloated SDKs, web scrapers, and background polling modules have been eliminated to reduce the Docker image size from **~3.0 GB down to ~120 MB** and idle RAM from **~850 MB down to ~40 MB**.
+Mirror-Bot-Lite is stripped down strictly to **core downloading and leeching** (Torrents, Direct URLs, YouTube/Streams, Telegram files -> Telegram or Cloud via Rclone). All heavy background daemons, bloated SDKs, web scrapers, and background polling modules have been eliminated to reduce the Docker image size from **~3.0 GB down to ~610 MB disk (~180 MB download)** and idle RAM from **~850 MB down to ~250 MB**.
 
 ---
 
@@ -10,11 +10,11 @@ Mirror-Bot-Lite is stripped down strictly to **core downloading and leeching** (
 
 | Metric / Feature | 🌟 Upstream MLTB | ⚡ Mirror-Bot-Lite | Improvement |
 | :--- | :---: | :---: | :---: |
-| **Docker Image Size** | **~3.0 GB** | **~120 MB** | **~96% reduction** |
-| **Base Operating System** | Heavy Ubuntu + PPAs (~170 MB) | `python:3.11-slim` Debian (~45 MB) | **~75% smaller base** |
-| **Idle Memory (RAM)** | **~450 – 850 MB** | **~30 – 50 MB** | **~94% memory savings** |
-| **Background Daemons** | 5 daemons (Java, qBit, SABnzbd, Gunicorn, Aria2) | **1 daemon** (`aria2c`) | **Zero Java/Qt/Web bloat** |
-| **Python Dependencies** | 36 heavy packages | **20 minimal packages** | **Zero bloat wheels** |
+| **Docker Image Size** | **~3.0 GB** | **~610 MB disk (~180 MB dl)** | **~80% reduction** |
+| **Base Operating System** | Heavy Ubuntu + PPAs (~170 MB) | `python:3.11-alpine` (~10 MB) | **~94% smaller base** |
+| **Idle Memory (RAM)** | **~450 – 850 MB** | **~250 MB** | **~71% memory savings** |
+| **Background Daemons** | 5 daemons (Java, qBit, SABnzbd, Gunicorn, Aria2) | **2 processes** (bot + `aria2c`) | **Zero Java/Qt/Web bloat** |
+| **Python Dependencies** | 36 heavy packages | **20 direct dependencies** (53 incl. transitive) | **Zero bloat wheels** |
 | **BitTorrent / Magnet Engine** | qBittorrent-nox + Aria2c (redundant) | **Aria2c** (unified engine) | **Consolidated to 1 engine** |
 | **Direct & Filehost Downloads** | JDownloader 2 (Java) + Aria2c | **Aria2c + yt-dlp** | **No Java runtime needed** |
 | **Video & Stream Support** | `yt-dlp` + `ffmpeg` | `yt-dlp` + `ffmpeg` | **100% Retained** |
@@ -59,7 +59,7 @@ cd mirror-bot-lite
 cp config_sample.py config.py
 # (Edit config.py with your credentials: BOT_TOKEN, OWNER_ID, TELEGRAM_API, TELEGRAM_HASH)
 
-# 3. Build the lightweight Docker image (~120 MB)
+# 3. Build the lightweight Docker image (~180 MB download / ~610 MB disk)
 docker build -t mirror-bot-lite .
 
 # 4. Run the container
@@ -71,11 +71,9 @@ docker run -d \
 
 ### Option 2: Docker Compose
 
-Create a `docker-compose.yml` file:
+Using the included `docker-compose.yml`:
 
 ```yaml
-version: '3.8'
-
 services:
   mirror-bot:
     build: .

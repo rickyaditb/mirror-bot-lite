@@ -1,6 +1,9 @@
-from uvloop import install
+try:
+    from uvloop import install
 
-install()
+    install()
+except (ImportError, ModuleNotFoundError):
+    pass
 from asyncio import Lock, new_event_loop, set_event_loop
 from logging import (
     getLogger,
